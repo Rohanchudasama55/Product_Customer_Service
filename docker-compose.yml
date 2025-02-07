@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-service
+    env_file:
+      - .env.docker
+    restart: always
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "8083:8083"
+    depends_on:
+      - db
+    volumes:
+      - cdn:/var/www/cdn/bookcars
+      - .:/app
+    networks:
+      - backend
+
+  db:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - backend
+
+volumes:
+  mongo-data:
+    driver: local
+  cdn:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
