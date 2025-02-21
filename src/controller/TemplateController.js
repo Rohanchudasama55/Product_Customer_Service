@@ -13,9 +13,9 @@ export const createTemplateCntrlr = async (req, res) => {
     components,
     IsLibrary,
     IsMetaTemplate,
-    variables
+    variables,
   } = req.body;
-  const url = req.url
+  const url = req.url;
   if (
     !name ||
     !language ||
@@ -34,7 +34,7 @@ export const createTemplateCntrlr = async (req, res) => {
       IsLibrary,
       IsMetaTemplate,
       variables,
-      url
+      url,
     });
     if (templateData) {
       return sendSuccessResponse(
@@ -68,10 +68,15 @@ export const getMetaTemplateCntrlr = async (req, res) => {
 
 export const getTemplateLibraryCntrlr = async (req, res) => {
   try {
-    const templates = await getTemplateLibraryService({}, {});
+    // Set pagination options
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const options = { page, limit };
+
+    const templates = await getTemplateLibraryService({}, options);
     return sendSuccessResponse(res, "Template Fetch Successfully", templates);
   } catch (error) {
-    console.log("Error while getTemplateLibrary::",error);
+    console.log("Error while getTemplateLibrary::", error);
     return sendErrorResponse(
       res,
       error.statusCode || 500,

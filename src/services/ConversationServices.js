@@ -4,9 +4,11 @@ import mongoose from "mongoose";
 import TemplateModel from "../model/TemplateModel.js";
 import contactModel from "../model/ContactModel.js";
 
-
-export const getAllConversations = async (sourceBy) => {
+export const getAllConversations = async (sourceBy, options) => {
   try {
+    const { page, limit } = options;
+    const skip = (page - 1) * limit;
+
     const conversationsWithText = await ConversationModel.aggregate([
       {
         $match: { isDeleted: false, sourceBy },
@@ -34,7 +36,15 @@ export const getAllConversations = async (sourceBy) => {
       {
         $lookup: {
           from: "texts",
-          let: { lastTextId: { $cond: [{ $eq: ["$isValidLastTextId", true] }, { $toObjectId: "$lastTextIdStr" }, null] } },
+          let: {
+            lastTextId: {
+              $cond: [
+                { $eq: ["$isValidLastTextId", true] },
+                { $toObjectId: "$lastTextIdStr" },
+                null,
+              ],
+            },
+          },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$lastTextId"] } } },
             {
@@ -80,9 +90,26 @@ export const getAllConversations = async (sourceBy) => {
           lastText: { $arrayElemAt: ["$lastText", 0] },
         },
       },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
     ]);
 
-    return conversationsWithText;
+    // Count total conversations for pagination metadata
+    const totalConversations = await ConversationModel.countDocuments({
+      isDeleted: false,
+      sourceBy,
+    });
+
+    return {
+      conversationsWithText,
+      totalConversations,
+      totalPages: Math.ceil(totalConversations / limit),
+      currentPage: page,
+    };
   } catch (error) {
     throw {
       statusCode: error.statusCode || 500,
@@ -96,21 +123,31 @@ export const getConversationById = async (ConversationId) => {
   try {
     console.log("API call for getConversationById", ConversationId);
     try {
-const conversationData = await DatabaseHelper.getRecordByIdFilter(ConversationModel,ConversationId, { unreadCount: { $gt: 0 } })
+      const conversationData = await DatabaseHelper.getRecordByIdFilter(
+        ConversationModel,
+        ConversationId,
+        { unreadCount: { $gt: 0 } }
+      );
 
-      if(conversationData && conversationData._id){
-const updateConversation = await DatabaseHelper.updateRecordById(ConversationModel, ConversationId, {
-        unreadCount: 0,
-      });
+      if (conversationData && conversationData._id) {
+        const updateConversation = await DatabaseHelper.updateRecordById(
+          ConversationModel,
+          ConversationId,
+          {
+            unreadCount: 0,
+          }
+        );
       }
-      
     } catch (error) {
-      console.log("error",error);
+      console.log("error", error);
       console.error(
         `Error updating conversation for ${ConversationId}:`,
         error
       );
-      throw{statusCode:error.statusCode || 500, message:error.message || "Internal Server Error"}
+      throw {
+        statusCode: error.statusCode || 500,
+        message: error.message || "Internal Server Error",
+      };
     }
 
     let conversation = await ConversationModel.aggregate([
@@ -133,8 +170,12 @@ const updateConversation = await DatabaseHelper.updateRecordById(ConversationMod
           from: "texts",
           let: { conversationId: "$_id" },
           pipeline: [
-            { $match: { $expr: { $eq: ["$conversationId", "$$conversationId"] } } },
-            { $sort: { createdAt: -1 } }, 
+            {
+              $match: {
+                $expr: { $eq: ["$conversationId", "$$conversationId"] },
+              },
+            },
+            { $sort: { createdAt: -1 } },
             {
               $project: {
                 textId: 1,
@@ -186,7 +227,7 @@ const updateConversation = await DatabaseHelper.updateRecordById(ConversationMod
               else: "$receiverData",
             },
           },
-          textData: "$textData", 
+          textData: "$textData",
         },
       },
     ]);
@@ -205,7 +246,9 @@ const updateConversation = await DatabaseHelper.updateRecordById(ConversationMod
       ) {
         try {
           const template = await TemplateModel.findById(textItem.text);
-          conversation.textData[i].text = template ? template : "Template not found";
+          conversation.textData[i].text = template
+            ? template
+            : "Template not found";
         } catch (error) {
           console.error(
             `Error fetching template for textId: ${textItem.text}`,
@@ -227,13 +270,12 @@ const updateConversation = await DatabaseHelper.updateRecordById(ConversationMod
   }
 };
 
-
 export const conversationInitiateServive = async (data) => {
   try {
     const { phoneNumber, sourceBy, userId } = data;
     let contact = await DatabaseHelper.getRecords(
       contactModel,
-      { phoneNumber,sourceBy },
+      { phoneNumber, sourceBy },
       {}
     );
     contact = contact[0];

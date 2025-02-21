@@ -41,4 +41,12 @@ const textSchema = new mongoose.Schema(
   }
 );
 
+// Custom toJSON method to remove __v
+textSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
 export default mongoose.model("Text", textSchema);

@@ -1,17 +1,24 @@
-import { campaignListServices,createCampaignService } from "../services/CampaignServices.js";
+import {
+  campaignListServices,
+  createCampaignService,
+} from "../services/CampaignServices.js";
 import { sendSuccessResponse, sendErrorResponse } from "../common/Response.js";
 
-
-
-export const getAllCampaignCntrlr = async (req,res) => {
+export const getAllCampaignCntrlr = async (req, res) => {
   try {
-    let filter = {}
-    if(req.user.role === "admin"){
-      filter = {}
-    }else{
-      filter = {sourceBy:req.user.managedBy}
+    let filter = {};
+    if (req.user.role === "admin") {
+      filter = {};
+    } else {
+      filter = { sourceBy: req.user.managedBy };
     }
-    const campaigns = await campaignListServices(filter);
+
+    // Set pagination options
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const options = { page, limit };
+
+    const campaigns = await campaignListServices(filter, options);
     return sendSuccessResponse(res, "Campaign fetched successfully", campaigns);
   } catch (error) {
     return sendErrorResponse(
@@ -22,18 +29,29 @@ export const getAllCampaignCntrlr = async (req,res) => {
   }
 };
 
-
-export const createCampaignCntrlr = async(req,res) => {
-  try { 
-    const sourceBy = req.user.managedBy
-    const createdBy = req.user._id
+export const createCampaignCntrlr = async (req, res) => {
+  try {
+    const sourceBy = req.user.managedBy;
+    const createdBy = req.user._id;
     const data = req.body;
     if (!data) {
-      return sendErrorResponse(res,400,"Bad Request")
-    } 
-    const campaignData = await createCampaignService({...data,sourceBy,createdBy})
-    return sendSuccessResponse(res,"campaign created succesfully",campaignData)
+      return sendErrorResponse(res, 400, "Bad Request");
+    }
+    const campaignData = await createCampaignService({
+      ...data,
+      sourceBy,
+      createdBy,
+    });
+    return sendSuccessResponse(
+      res,
+      "campaign created succesfully",
+      campaignData
+    );
   } catch (error) {
-    return await sendErrorResponse(res, error.statusCode || 500, error.message || "Internal Server Error");
+    return await sendErrorResponse(
+      res,
+      error.statusCode || 500,
+      error.message || "Internal Server Error"
+    );
   }
-}
+};

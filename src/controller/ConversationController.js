@@ -8,15 +8,31 @@ import { sendErrorResponse, sendSuccessResponse } from "../common/Response.js";
 export const getAllConversationCntrlr = async (req, res) => {
   try {
     const sourceBy = req.user.managedBy;
-    const Conversations = await getAllConversations(sourceBy);
-    if (Conversations && Conversations.length <= 0) {
-      return sendErrorResponse(res, 404, "conversation not found!!");
+    // Set pagination options
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const options = { page, limit };
+
+    const {
+      conversationsWithText,
+      totalConversations,
+      totalPages,
+      currentPage,
+    } = await getAllConversations(sourceBy, options);
+
+    if (!conversationsWithText || conversationsWithText.length === 0) {
+      return sendErrorResponse(res, 404, "Conversations not found!");
     }
-    return sendSuccessResponse(
-      res,
-      "conversation fetch successfully",
-      Conversations
-    );
+
+    return sendSuccessResponse(res, "Conversations fetched successfully", {
+      conversations: conversationsWithText,
+      pagination: {
+        totalConversations,
+        totalPages,
+        currentPage,
+        limit,
+      },
+    });
   } catch (error) {
     return await sendErrorResponse(
       res,

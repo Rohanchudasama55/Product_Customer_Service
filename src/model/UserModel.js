@@ -1,34 +1,45 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     email: {
-        type: String,
-        unique: true,
+      type: String,
+      unique: true,
     },
-    password:{
-        type: String,
+    password: {
+      type: String,
     },
-    phoneNumber:{
-        type: String,
-        unique:true,
-        required: true
+    phoneNumber: {
+      type: String,
+      unique: true,
+      required: true,
     },
-    role:{
-        type: String,
-        enum: ['user','admin'],
-        default:'user'
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
-    managedBy:{
-        type: String,
-        enum:["BIOS","HRMS"],
-        required: true
-    }
-}, {
+    managedBy: {
+      type: String,
+      enum: ["BIOS", "HRMS"],
+      required: true,
+    },
+  },
+  {
     timestamps: true,
-  })
+  }
+);
 
-export default mongoose.model('User', userSchema);
+// Custom toJSON method to remove __v
+userSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
+export default mongoose.model("User", userSchema);
