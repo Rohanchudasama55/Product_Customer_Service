@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 import * as dbConnection from "./src/config/DBConfig.js";
-import { routes } from "./src/routes/index.js";
+import  routes  from "./src/routes/index.js";
 const app = express();        
 
 app.use(cors({
@@ -13,10 +13,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
+dbConnection.connectDB();
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:true}))
 
-dbConnection.connectDB();
 
 app.use(routes)
 app.listen(process.env.USER_PORT || 3000, () => { 

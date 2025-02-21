@@ -1,7 +1,10 @@
 import userRoutes from "./UserRoutes.js";
 import authRoutes from "./AuthRoutes.js";
+import groupRoutes from "./GroupRoutes.js";
 // import contactRoutes from "./ContactRoutes.js";
 // import templateRoutes from "./TemplateRoutes.js"
 
  
-export const routes = [userRoutes,authRoutes]
+ const routes = [userRoutes,authRoutes,groupRoutes]
+
+ export default routes

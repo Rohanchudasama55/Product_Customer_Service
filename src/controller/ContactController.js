@@ -9,7 +9,11 @@ import {
 
 export const createContactCntrlr = async (req, res) => {
     try {
-        const contactData = await createContactService(req.body);
+        const {name,email,phoneNumber,sourceBy} = req.body
+        if(!sourceBy){
+            sourceBy = req.user.managedBy
+        }
+        const contactData = await createContactService({name,email,phoneNumber,sourceBy});
         return sendSuccessResponse(res, "Contact created successfully", contactData);
     } catch (error) {
         return sendErrorResponse(res, error.statusCode || 500, error.message || "Internal Server Error");
@@ -27,7 +31,8 @@ export const getContactByIdCntrlr = async (req, res) => {
 
 export const getContactsCntrlr = async (req, res) => {
     try {
-        const contacts = await getContactsService({}, {});
+        const sourceBy = req.user.managedBy
+        const contacts = await getContactsService({sourceBy}, {});
         return sendSuccessResponse(res, "Contacts fetched successfully", contacts);
     } catch (error) {
         return sendErrorResponse(res, error.statusCode || 500, error.message || "Internal Server Error");

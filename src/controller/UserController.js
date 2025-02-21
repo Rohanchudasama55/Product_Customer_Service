@@ -1,11 +1,11 @@
 import {sendSuccessResponse,sendErrorResponse} from "../common/Response.js"
-import { createUserService,getUserByIdService,updateUserByIdService ,deleteUserByIdService,getUsersService} from "../services/UserServices.js"
+import { createUserService,getUserByIdService,updateUserByIdService ,deleteUserByIdService,getUsersService,updateAdminRoleService} from "../services/UserServices.js"
 
 
 export const createUserCntrlr = async(req,res) => {
     try {
-        const {name,email,password,contact,role,managedBy} = req.body
-        const userData = await createUserService({name,email,password,contact,role,managedBy})
+        const {name,email,password,phoneNumber,role,managedBy} = req.body
+        const userData = await createUserService({name,email,password,phoneNumber,role,managedBy})
             if(userData && userData._id){
                 return sendSuccessResponse(res,"User Created Successfully",userData._id)
             }
@@ -49,6 +49,18 @@ export const updateUserByIdCntrlr = async (req, res) => {
         );
     }
 };
+
+export const adminRoleCntrlr = async(req,res) => {
+    try {
+        const adminData = req.user
+        const managedBy = req.body.managedBy
+        const updatedToken = await updateAdminRoleService({...adminData,managedBy})
+        return sendSuccessResponse(res, "Admin Token updated successfully", updatedToken);
+    } catch (error) {
+        return sendErrorResponse(res, error.statusCode || 500, error.message || "Internal Server Error"
+        );
+    }
+}
 
 export const deleteUserByIdCntrlr = async (req, res) => {
     try {
