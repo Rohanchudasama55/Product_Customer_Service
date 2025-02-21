@@ -1,6 +1,7 @@
 import databaseHelper from "../common/DatabaseHelper.js"
 import User from "../model/UserModel.js"
 import { bcryptPassword } from "../common/AuthHelper.js"
+import { generateJwtToken } from "../common/AuthHelper.js"
 
 
 export const createUserService = async(data) => {
@@ -40,6 +41,16 @@ export const updateUserByIdService = async (id, data) => {
         throw { statusCode: error.statusCode || 500, message: error.message || "Error in updateUserByID Service" ,error };
     }
 };
+
+export const updateAdminRoleService = async(data) => {
+    try {
+        const managedBy = data.managedBy
+        const updateAdminRole = await databaseHelper.updateRecordById(User,data._doc._id,{managedBy})
+        return  await generateJwtToken(updateAdminRole);
+    } catch (error) {
+        throw { statusCode: error.statusCode || 500, message: error.message || "Error while update Admin Role Service" ,error };
+    }
+}
 
 export const deleteUserByIdService = async (id) => {
     try {

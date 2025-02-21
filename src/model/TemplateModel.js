@@ -20,7 +20,6 @@ const templateSchema = new mongoose.Schema({
       type: String,
     },
   ],
-  library_category: String,
   components: [
     {
       type: {
@@ -36,11 +35,12 @@ const templateSchema = new mongoose.Schema({
         type: String,
       },
       example: {
-        type: mongoose.Schema.Types.Mixed, 
+        type: mongoose.Schema.Types.Mixed, // Allows flexible object structure
+        default: {},
       },
-      url:{
-        type: String,
-      },
+      // url:{
+      //   type: String, ----------> image,video,document 
+      // },
       buttons: {
         type: [
           {

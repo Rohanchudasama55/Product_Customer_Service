@@ -12,20 +12,23 @@ const userSchema = new mongoose.Schema({
     password:{
         type: String,
     },
-    contact:{
+    phoneNumber:{
         type: String,
+        unique:true,
         required: true
     },
     role:{
         type: String,
-        required: true,
         enum: ['user','admin'],
         default:'user'
     },
     managedBy:{
         type: String,
+        enum:["BIOS","HRMS"],
         required: true
     }
-})
+}, {
+    timestamps: true,
+  })
 
 export default mongoose.model('User', userSchema);

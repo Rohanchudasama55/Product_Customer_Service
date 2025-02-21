@@ -5,7 +5,7 @@ dotenv.config()
 
 export const generateJwtToken = async(user) => {
     try {
-         return jwt.sign({_id:user._id,email:user.email}, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
+         return jwt.sign({_id:user._id,email:user.email,role:user.role,managedBy:user.managedBy}, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
     } catch (error) {
         throw new Error(error)
     }

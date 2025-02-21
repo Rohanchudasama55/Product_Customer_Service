@@ -6,27 +6,44 @@ dotenv.config();
 
 export const createtemplateService = async(templateData) => {
     try {
-        const response = await axios.post(
-          `https://graph.facebook.com/v21.0/429839343556898/message_templates/`,
-          {
-            ...templateData,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log("templateData>>>",templateData);
-  
-        if (response && response.data.id ) {
-          return await DatabaseHelper.createRecord(Templates,templateData)
+      let responseData;
+        if(templateData.IsLibrary){
+         try {
+           const  data =  await DatabaseHelper.createRecord(Templates,templateData)
+           responseData = data._id
+         } catch (error) {
+            throw{statuaCode: error.statuaCode,message: error.message || "error while store template in database"}
+         }
         }
+
+        if(templateData.IsMetaTemplate){
+          try {
+           const response = await axios.post(
+              `https://graph.facebook.com/v21.0/429839343556898/message_templates/`,
+              {
+                ...templateData,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            responseData = response.data.id
+          } catch (error) {
+            console.log("..........",error.response.data);
+            
+            let message;
+             error.response ? message = error.response.data : message = error.message
+             throw { statusCode: error.statusCode || 500, message: message || error.message || "Error in create Template Service" ,error };
+          }
+        }
+        return responseData
       } catch (error) {
-        let message;
-        error.response ? message = error.response.data : message = error.message
-        throw { statusCode: 500 || error.statusCode, message: message || error.message || "Error in createUser Service" ,error };
+        console.log("error>>",error);
+        
+        throw { statusCode:  error.statusCode || 500, message: message || error.message || "Error in createUser Service" ,error };
       }
 }
 
