@@ -56,12 +56,24 @@ export const getUserByIdCntrlr = async (req, res) => {
 
 export const getUsersCntrlr = async (req, res) => {
   try {
+    // Capture the search term
+    const search = req.query.search?.trim("") || "";
+    const filter = search
+      ? {
+          $or: [
+            { email: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: "i" } },
+            { phoneNumber: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
     // Set pagination options
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    const options = { page, limit };
+    const options = { page: search ? 1 : page, limit };
 
-    const users = await getUsersService({}, options);
+    const users = await getUsersService(filter, options);
     return sendSuccessResponse(res, "Users fetched successfully", users);
   } catch (error) {
     return sendErrorResponse(
