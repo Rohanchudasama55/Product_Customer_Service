@@ -12,7 +12,7 @@ import { initializeSocket } from "./src/config/socket.js";
 const app = express();
 const server = http.createServer(app);
 
-let io; 
+let io;
 
 const startServer = async () => {
   io = await initializeSocket(server);
@@ -34,22 +34,13 @@ const startServer = async () => {
   // Start Server
   const PORT = process.env.WHATSAPP_PORT || 3002;
   server.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Whatsapp-service running on PORT :${PORT}`);
+    console.log(`🚀 Whatsapp-service running on PORT 000 :${PORT}`);
   });
 };
 
 startServer();
 
 export { io };
-
-
-
-
-
-
-
-
-
 
 // import express from "express";
 // import bodyParser from "body-parser";
@@ -62,11 +53,10 @@ export { io };
 // import * as dbConnection from "./src/config/DBConfig.js";
 // import { initializeSocket } from "./src/config/socket.js";
 
-
 // const app = express();
 // const server = http.createServer(app);
 
-// const io = await initializeSocket(server); 
+// const io = await initializeSocket(server);
 // // console.log("io",io);
 
 // export { io };
