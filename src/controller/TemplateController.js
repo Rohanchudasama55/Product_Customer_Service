@@ -68,12 +68,16 @@ export const getMetaTemplateCntrlr = async (req, res) => {
 
 export const getTemplateLibraryCntrlr = async (req, res) => {
   try {
+    // Capture the search term
+    const search = req.query.search?.trim("") || "";
+    const filter = search ? { name: { $regex: search, $options: "i" } } : {};
+
     // Set pagination options
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    const options = { page, limit };
+    const options = { page: search ? 1 : page, limit };
 
-    const templates = await getTemplateLibraryService({}, options);
+    const templates = await getTemplateLibraryService(filter, options);
     return sendSuccessResponse(res, "Template Fetch Successfully", templates);
   } catch (error) {
     console.log("Error while getTemplateLibrary::", error);

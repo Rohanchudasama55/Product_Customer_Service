@@ -48,13 +48,25 @@ export const getContactByIdCntrlr = async (req, res) => {
 
 export const getContactsCntrlr = async (req, res) => {
   try {
+    // Capture the search term
+    const search = req.query.search?.trim("") || "";
+    const filter = search
+      ? {
+          $or: [
+            { email: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: "i" } },
+            { phoneNumber: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
     // Set pagination options
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    const options = { page, limit };
+    const options = { page: search ? 1 : page, limit };
 
     const sourceBy = req.user.managedBy;
-    const contacts = await getContactsService({ sourceBy }, options);
+    const contacts = await getContactsService({ ...filter, sourceBy }, options);
     return sendSuccessResponse(res, "Contacts fetched successfully", contacts);
   } catch (error) {
     return sendErrorResponse(
