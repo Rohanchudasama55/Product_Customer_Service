@@ -29,15 +29,23 @@ const campaignSchema = new mongoose.Schema(
       required: true,
       ref: "User",
     },
-    sourceBy:{
+    sourceBy: {
       type: String,
-      enum:['HRMS','BIOS'],
-      required:true
-    }
+      enum: ["HRMS", "BIOS"],
+      required: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Custom toJSON method to remove __v
+campaignSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
 
 export default mongoose.model("campaign", campaignSchema);

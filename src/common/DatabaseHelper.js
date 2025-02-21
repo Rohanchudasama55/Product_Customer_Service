@@ -35,40 +35,68 @@ class DatabaseHelper {
       };
     }
   }
-  static async getRecordByIdFilter(Model, id, filter = {}, populateFields = "") {
+  static async getRecordByIdFilter(
+    Model,
+    id,
+    filter = {},
+    populateFields = ""
+  ) {
     try {
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw { statusCode: 400, message: "Invalid ID format" };
-        }
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw { statusCode: 400, message: "Invalid ID format" };
+      }
 
-        let query = Model.findOne({ _id: id, ...filter });
+      let query = Model.findOne({ _id: id, ...filter });
 
-        if (populateFields) {
-            query = query.populate(populateFields);
-        }
+      if (populateFields) {
+        query = query.populate(populateFields);
+      }
 
-        const document = await query.exec();
-       
-        
-        return document;
+      const document = await query.exec();
+
+      return document;
     } catch (error) {
-        throw {
-            statusCode: error.statusCode || 500,
-            message: error.message || "Error fetching record by ID",
-            details: error.details || error.message,
-        };
+      throw {
+        statusCode: error.statusCode || 500,
+        message: error.message || "Error fetching record by ID",
+        details: error.details || error.message,
+      };
     }
-}
-
+  }
 
   static async getRecords(Model, filter, options = {}) {
     try {
-      const projection = options.projection || {}; 
-      const documents = await Model.find(filter, projection, options);
+      // Extract page and limit from options
+      const { page = 1, limit = 10, projection = {} } = options;
+
+      // Calculate skip based on the page and limit
+      const skip = (page - 1) * limit;
+
+      // Query options for MongoDB
+      const queryOptions = {
+        projection,
+        skip,
+        limit,
+      };
+
+      // Find documents based on filter and options
+      const documents = await Model.find(filter, projection, queryOptions);
+
       if (!documents || documents.length === 0) {
-        return [];
+        return { data: [], total: 0 };
       }
-      return documents;
+
+      // Get total count of documents matching the filter for pagination info
+      const total = await Model.countDocuments(filter);
+
+      // Return the documents along with pagination metadata
+      return {
+        data: documents,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     } catch (error) {
       throw {
         statusCode: error.statusCode || 500,

@@ -39,14 +39,14 @@ const templateSchema = new mongoose.Schema({
         default: {},
       },
       // url:{
-      //   type: String, ----------> image,video,document 
+      //   type: String, ----------> image,video,document
       // },
       buttons: {
         type: [
           {
             type: {
               type: String,
-              enum: ["QUICK_REPLY", "URL", "PHONE_NUMBER", "CUSTOM"], 
+              enum: ["QUICK_REPLY", "URL", "PHONE_NUMBER", "CUSTOM"],
               required: true,
             },
             text: {
@@ -60,10 +60,18 @@ const templateSchema = new mongoose.Schema({
             },
           },
         ],
-        default: undefined, 
+        default: undefined,
       },
     },
   ],
+});
+
+// Custom toJSON method to remove __v
+templateSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
 });
 
 export default mongoose.model("Templates", templateSchema);

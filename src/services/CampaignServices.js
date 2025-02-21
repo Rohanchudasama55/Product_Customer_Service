@@ -9,32 +9,51 @@ import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
 
-export const campaignListServices = async(filter) => {
-    try {
-      
-    return await DatabaseHelper.getRecords(CampaignModel,filter,{}) 
-    } catch (error) {
-        throw { statusCode: error.statusCode || 500, message: error.message || "Error in campaignListServices", error };
-
-    }
-}
+export const campaignListServices = async (filter, options) => {
+  try {
+    return await DatabaseHelper.getRecords(CampaignModel, filter, options);
+  } catch (error) {
+    throw {
+      statusCode: error.statusCode || 500,
+      message: error.message || "Error in campaignListServices",
+      error,
+    };
+  }
+};
 
 export const createCampaignService = async (data) => {
   try {
-    const { to, template_name, preview_url, type, language, text, image, campaign_name,createdBy,sourceBy } = data;
+    const {
+      to,
+      template_name,
+      preview_url,
+      type,
+      language,
+      text,
+      image,
+      campaign_name,
+      createdBy,
+      sourceBy,
+    } = data;
     if (!["template", "text", "image", "video", "document"].includes(type)) {
       throw { statusCode: 400, message: "Invalid MessageType" };
     }
-    console.log("createdBy",createdBy);
-    console.log("sourceBy",sourceBy);
-    
-    
-    const template = await DatabaseHelper.getRecords(TemplateModel, { name: template_name }, {});
-    if (!template || template.length === 0) throw { statusCode: 404, message: "Template not found" };
+
+    const template = await DatabaseHelper.getRecords(
+      TemplateModel,
+      { name: template_name },
+      {}
+    );
+    if (!template || template.length === 0)
+      throw { statusCode: 404, message: "Template not found" };
 
     const selectedTemplate = template[0];
     const variables = selectedTemplate.variables;
-    const contacts = await DatabaseHelper.getRecords(ContactModel, { phoneNumber: { $in: to } }, {});
+    const contacts = await DatabaseHelper.getRecords(
+      ContactModel,
+      { phoneNumber: { $in: to } },
+      {}
+    );
 
     const campaign_data = await DatabaseHelper.createRecord(CampaignModel, {
       campaign_name,
@@ -45,7 +64,7 @@ export const createCampaignService = async (data) => {
       message_failed: 0,
       total_contact: to.length,
       createdBy,
-      sourceBy
+      sourceBy,
     });
 
     const results = [];
@@ -54,7 +73,11 @@ export const createCampaignService = async (data) => {
       const contact = contacts.find((c) => c.phoneNumber === number);
 
       if (!contact) {
-        results.push({ number, status: "failed", message: "Contact does not exist" });
+        results.push({
+          number,
+          status: "failed",
+          message: "Contact does not exist",
+        });
         await DatabaseHelper.createRecord(CampaignMessageModel, {
           contactId: null,
           status: "failed",
@@ -62,16 +85,25 @@ export const createCampaignService = async (data) => {
           campaignId: campaign_data._id,
           template_name: template_name || "",
         });
-        await DatabaseHelper.updateRecordById(CampaignModel, campaign_data._id, {
-          $inc: { message_failed: 1 },
-          $set: { updatedAt: new Date() },
-        });
+        await DatabaseHelper.updateRecordById(
+          CampaignModel,
+          campaign_data._id,
+          {
+            $inc: { message_failed: 1 },
+            $set: { updatedAt: new Date() },
+          }
+        );
         continue;
       }
 
       const componentParameters = variables.map((variable) => ({
         type: "text",
-        text: variable.toLowerCase() === "name" ? contact.name : variable.toLowerCase() === "phonenumber" ? contact.phoneNumber : variable,
+        text:
+          variable.toLowerCase() === "name"
+            ? contact.name
+            : variable.toLowerCase() === "phonenumber"
+            ? contact.phoneNumber
+            : variable,
       }));
 
       const payload = {
@@ -95,7 +127,10 @@ export const createCampaignService = async (data) => {
           },
         });
       } catch (error) {
-        console.error(`Failed to send message to ${number}:`, error.response?.data || error.message);
+        console.error(
+          `Failed to send message to ${number}:`,
+          error.response?.data || error.message
+        );
 
         await DatabaseHelper.createRecord(CampaignMessageModel, {
           contactId: contact._id,
@@ -105,13 +140,21 @@ export const createCampaignService = async (data) => {
           template_name: template_name || "",
         });
 
-        await DatabaseHelper.updateRecordById(CampaignModel, campaign_data._id, {
-          $inc: { message_failed: 1 },
-          $set: { updatedAt: new Date() },
-        });
+        await DatabaseHelper.updateRecordById(
+          CampaignModel,
+          campaign_data._id,
+          {
+            $inc: { message_failed: 1 },
+            $set: { updatedAt: new Date() },
+          }
+        );
 
-        results.push({ number, status: "failed", message: error.message || "Message send failed" });
-        continue; 
+        results.push({
+          number,
+          status: "failed",
+          message: error.message || "Message send failed",
+        });
+        continue;
       }
 
       await DatabaseHelper.createRecord(CampaignMessageModel, {
@@ -122,7 +165,11 @@ export const createCampaignService = async (data) => {
         template_name: template_name || "",
       });
 
-      let conversation = await DatabaseHelper.getRecords(ConversationModel, { receiverId: contact._id }, {});
+      let conversation = await DatabaseHelper.getRecords(
+        ConversationModel,
+        { receiverId: contact._id },
+        {}
+      );
 
       if (!conversation || conversation.length === 0) {
         conversation = await DatabaseHelper.createRecord(ConversationModel, {
@@ -146,22 +193,33 @@ export const createCampaignService = async (data) => {
       };
 
       try {
-        const textData = await DatabaseHelper.createRecord(TextModel, textPayload);
-        await DatabaseHelper.updateRecordById(ConversationModel, conversation._id, { lastTextId: textData._id 
-        });
+        const textData = await DatabaseHelper.createRecord(
+          TextModel,
+          textPayload
+        );
+        await DatabaseHelper.updateRecordById(
+          ConversationModel,
+          conversation._id,
+          { lastTextId: textData._id }
+        );
       } catch (error) {
         console.error(`Error saving message data for ${number}:`, error);
-        results.push({ number, status: "failed", message: "Error saving message data" });
+        results.push({
+          number,
+          status: "failed",
+          message: "Error saving message data",
+        });
       }
       results.push({ number, status: "success", data: response.data });
     }
 
-    console.log("Final Data:", results);
     return results;
   } catch (error) {
     console.error("Error in createCampaignService:", error);
-    throw { statusCode: error.statusCode || 500, message: error.message || "Internal server error", error };
+    throw {
+      statusCode: error.statusCode || 500,
+      message: error.message || "Internal server error",
+      error,
+    };
   }
 };
-
-

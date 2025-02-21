@@ -16,7 +16,7 @@ const conversationSchema = new mongoose.Schema(
       default: false,
     },
     lastTextId: {
-      type: mongoose.Schema.Types.Mixed, 
+      type: mongoose.Schema.Types.Mixed,
       required: true,
       ref: "Text",
     },
@@ -24,14 +24,22 @@ const conversationSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    sourceBy:{
-        type: String,
-        enum:['HRMS','BIOS']
-    }
+    sourceBy: {
+      type: String,
+      enum: ["HRMS", "BIOS"],
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Custom toJSON method to remove __v
+conversationSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
 
 export default mongoose.model("Conversation", conversationSchema);
