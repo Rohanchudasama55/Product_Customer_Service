@@ -6,7 +6,7 @@ export const createContactService = async (data) => {
   try {
     const contactData = {
       ...data,
-      phoneNumber: data.phoneNumber.replace(/\D/g, "") 
+      phoneNumber: data.phoneNumber.replace(/\D/g, ""),
     };
     return await databaseHelper.createRecord(Contact, contactData);
   } catch (error) {
@@ -57,11 +57,12 @@ export const updateContactByIdService = async (id, data) => {
 export const deleteContactByIdService = async (id) => {
   try {
     const deletContact = await databaseHelper.deleteRecordById(Contact, id);
-    const IsConversationExist = await databaseHelper.getRecords(
+    let IsConversationExist = await databaseHelper.getRecords(
       ConversationModel,
       { receiverId: id },
       {}
     );
+    IsConversationExist = IsConversationExist?.data;
     if (IsConversationExist && IsConversationExist.length) {
       await databaseHelper.updateRecordById(
         ConversationModel,

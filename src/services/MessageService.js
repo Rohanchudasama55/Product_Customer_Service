@@ -231,6 +231,7 @@ export const sendMessageService = async (data) => {
           { phoneNumber: number },
           {}
         );
+        contact = contact?.data;
         if (!contact?.length) {
           results.push({
             number,
@@ -256,6 +257,7 @@ export const sendMessageService = async (data) => {
             { name: template_name },
             {}
           );
+          template = template?.data;
           if (!template?.length) {
             results.push({
               number,
@@ -316,6 +318,7 @@ export const sendMessageService = async (data) => {
           { receiverId: contact._id },
           {}
         );
+        conversation = conversation?.data;
         if (!conversation?.length) {
           conversation = await DatabaseHelper.createRecord(ConversationModel, {
             receiverId: contact._id,
@@ -437,6 +440,7 @@ export const handleIncomingMessage = async (value) => {
         { phoneNumber: contactNumber },
         {}
       );
+      contact = contact?.data;
 
       if (!contact || contact.length === 0) {
         contact = await DatabaseHelper.createRecord(ContactModel, {
@@ -460,7 +464,7 @@ export const handleIncomingMessage = async (value) => {
         { receiverId: contact._id },
         {}
       );
-
+      conversation = conversation?.data;
       if (!conversation || conversation.length === 0) {
         conversation = await DatabaseHelper.createRecord(ConversationModel, {
           receiverId: contact._id,
@@ -599,13 +603,12 @@ export const handleStatusUpdate = async (value) => {
     }
     const textId = status.id;
 
-    const campaignMessage = await DatabaseHelper.getRecords(
+    const campaignMessageList = await DatabaseHelper.getRecords(
       CampaignMessageModel,
       { textId },
       {}
     );
-
-    const updateStatus = async (statusType) => {
+    const updateStatus = async (statusType, campaignMessage) => {
       try {
         if (campaignMessage.length) {
           const updatemessageStatus = await DatabaseHelper.updateRecordById(
@@ -656,16 +659,16 @@ export const handleStatusUpdate = async (value) => {
 
     switch (status.status) {
       case "sent":
-        await updateStatus("message_sent");
+        await updateStatus("message_sent", campaignMessageList?.data);
         break;
       case "delivered":
-        await updateStatus("message_delivered");
+        await updateStatus("message_delivered", campaignMessageList?.data);
         break;
       case "read":
-        await updateStatus("message_read");
+        await updateStatus("message_read", campaignMessageList?.data);
         break;
       case "failed":
-        await updateStatus("message_failed");
+        await updateStatus("message_failed", campaignMessageList?.data);
         break;
       default:
         console.warn(`Unhandled status type: ${status.status}`);
