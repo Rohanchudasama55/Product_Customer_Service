@@ -19,7 +19,12 @@ export const getAllCampaignCntrlr = async (req, res) => {
     const options = { page, limit };
 
     const campaigns = await campaignListServices(filter, options);
-    return sendSuccessResponse(res, "Campaign fetched successfully", campaigns);
+    return sendSuccessResponse(
+      res,
+      "Campaign fetched successfully",
+      200,
+      campaigns
+    );
   } catch (error) {
     return sendErrorResponse(
       res,
@@ -45,10 +50,37 @@ export const createCampaignCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "campaign created succesfully",
+      200,
       campaignData
     );
   } catch (error) {
     return await sendErrorResponse(
+      res,
+      error.statusCode || 500,
+      error.message || "Internal Server Error"
+    );
+  }
+};
+
+// Controller for fetching the campaign status counts
+export const getCampaignStatusCountsController = async (req, res) => {
+  try {
+    // Call service to fetch the campaign status counts
+    const campaigns = await campaignStatusCountsServices();
+    if (campaigns && campaigns.length > 0) {
+      const campaignData = campaigns[0];
+      delete campaignData._id;
+    }
+
+    // Return success response with the campaign data
+    return sendSuccessResponse(
+      res,
+      "Campaign status counts fetched successfully",
+      200,
+      campaigns
+    );
+  } catch (error) {
+    return sendErrorResponse(
       res,
       error.statusCode || 500,
       error.message || "Internal Server Error"

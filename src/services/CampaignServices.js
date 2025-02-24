@@ -175,3 +175,34 @@ export const createCampaignService = async (data) => {
     };
   }
 };
+
+// Service to fetch and aggregate campaign status counts
+export const campaignStatusCountsServices = async () => {
+  try {
+    const result = await CampaignModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          total_message_delivered: { $sum: "$message_delivered" },
+          total_message_sent: { $sum: "$message_sent" },
+          total_message_read: { $sum: "$message_read" },
+          total_message_failed: { $sum: "$message_failed" },
+          total_contacts: { $sum: "$total_contact" },
+        },
+      },
+    ]);
+
+    // Return the aggregated result if found
+    if (result && result.length > 0) {
+      return result;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    throw {
+      statusCode: error.statusCode || 500,
+      message: error.message || "Error in campaignListServices",
+      error,
+    };
+  }
+};
