@@ -23,7 +23,8 @@ export const createUserCntrlr = async (req, res) => {
       return sendSuccessResponse(
         res,
         "User Created Successfully",
-        userData._id
+        userData._id,
+        201
       );
     }
     return sendErrorResponse(res, 500, "Something Went wrong");
@@ -40,9 +41,9 @@ export const getUserByIdCntrlr = async (req, res) => {
   try {
     const user = await getUserByIdService(req.params.id);
     if (user && user._id) {
-      return sendSuccessResponse(res, "User fetched successfully", user);
+      return sendSuccessResponse(res, "User fetched successfully", user, 200);
     } else if (user && user.message) {
-      return sendSuccessResponse(res, user.message, null);
+      return sendSuccessResponse(res, user.message, null, 200);
     }
     return sendErrorResponse(res, 500, "Something Went wrong");
   } catch (error) {
@@ -74,7 +75,7 @@ export const getUsersCntrlr = async (req, res) => {
     const options = { page: search ? 1 : page, limit };
 
     const users = await getUsersService(filter, options);
-    return sendSuccessResponse(res, "Users fetched successfully", users);
+    return sendSuccessResponse(res, "Users fetched successfully", users, 200);
   } catch (error) {
     return sendErrorResponse(
       res,
@@ -87,7 +88,12 @@ export const getUsersCntrlr = async (req, res) => {
 export const updateUserByIdCntrlr = async (req, res) => {
   try {
     const updatedUser = await updateUserByIdService(req.params.id, req.body);
-    return sendSuccessResponse(res, "User updated successfully", updatedUser);
+    return sendSuccessResponse(
+      res,
+      "User updated successfully",
+      updatedUser,
+      200
+    );
   } catch (error) {
     return sendErrorResponse(
       res,
@@ -108,7 +114,8 @@ export const adminRoleCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Admin Token updated successfully",
-      updatedToken
+      updatedToken,
+      200
     );
   } catch (error) {
     return sendErrorResponse(
@@ -122,7 +129,12 @@ export const adminRoleCntrlr = async (req, res) => {
 export const deleteUserByIdCntrlr = async (req, res) => {
   try {
     const deletedUser = await deleteUserByIdService(req.params.id);
-    return sendSuccessResponse(res, "User deleted successfully", deletedUser);
+    return sendSuccessResponse(
+      res,
+      "User deleted successfully",
+      deletedUser,
+      200
+    );
   } catch (error) {
     return sendErrorResponse(
       res,

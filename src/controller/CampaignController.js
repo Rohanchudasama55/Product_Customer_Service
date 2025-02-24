@@ -38,8 +38,8 @@ export const getAllCampaignController = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Campaign fetched successfully",
-      200,
-      campaigns
+      campaigns,
+      200
     );
   } catch (error) {
     return sendErrorResponse(
@@ -66,8 +66,8 @@ export const createCampaignController = async (req, res) => {
     return sendSuccessResponse(
       res,
       "campaign created succesfully",
-      200,
-      campaignData
+      campaignData,
+      200
     );
   } catch (error) {
     return await sendErrorResponse(
@@ -81,8 +81,11 @@ export const createCampaignController = async (req, res) => {
 // Controller for fetching the campaign status counts
 export const getCampaignStatusCountsController = async (req, res) => {
   try {
+    // Define sourceby data from query parameter
+    const sourceBy = req.user.managedBy;
+
     // Call service to fetch the campaign status counts
-    const campaigns = await campaignStatusCountsServices();
+    const campaigns = await campaignStatusCountsServices(sourceBy);
     if (campaigns && campaigns.length > 0) {
       const campaignData = campaigns[0];
       delete campaignData._id;
@@ -92,8 +95,8 @@ export const getCampaignStatusCountsController = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Campaign status counts fetched successfully",
-      200,
-      campaigns
+      campaigns,
+      200
     );
   } catch (error) {
     return sendErrorResponse(

@@ -15,7 +15,7 @@ export const sendMessageCntrlr = async (req, res) => {
       return sendErrorResponse(res, 400, "Bad Request");
     }
     const result = await sendMessageService({ ...data, sourceBy, userId });
-    return sendSuccessResponse(res, "message send succesfully", result);
+    return sendSuccessResponse(res, "message send succesfully", result, 200);
   } catch (error) {
     return await sendErrorResponse(
       res,
@@ -45,7 +45,7 @@ export const getWebhookCall = async (req, res) => {
   try {
     const data = req.body;
     const webhookResponse = await getWebhookCallService(data);
-    sendSuccessResponse(res, "Webhook call succesfully", webhookResponse);
+    sendSuccessResponse(res, "Webhook call succesfully", webhookResponse, 200);
   } catch (error) {
     sendErrorResponse(res, 500, "Failed Webhook Call", error.message);
   }

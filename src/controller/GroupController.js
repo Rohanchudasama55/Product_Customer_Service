@@ -21,7 +21,8 @@ export const createGroupCntrlr = async (req, res) => {
       return sendSuccessResponse(
         res,
         "Group Created Successfully",
-        groupData._id
+        groupData._id,
+        201
       );
     }
     return sendErrorResponse(res, 500, "Something Went wrong");
@@ -50,7 +51,8 @@ export const getAllGroupRecordCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Group Record fetched Successfully",
-      groupsRecord
+      groupsRecord,
+      200
     );
   } catch (error) {
     return sendErrorResponse(
@@ -72,7 +74,8 @@ export const getGroupByIdCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Group Record fetched Successfully",
-      groupsRecord
+      groupsRecord,
+      200
     );
   } catch (error) {
     return sendErrorResponse(
