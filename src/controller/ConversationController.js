@@ -1,18 +1,15 @@
 import {
-  getAllConversations,
+  getConversations,
   getConversationById,
   conversationInitiateServive,
+  getConversationChatSearch,
 } from "../services/ConversationServices.js";
 import { sendErrorResponse, sendSuccessResponse } from "../common/Response.js";
 
 export const getAllConversationCntrlr = async (req, res) => {
   try {
     const sourceBy = req.user.managedBy;
-
-    // Get search query if available
     const searchQuery = req.query.search?.trim() || "";
-
-    // Set pagination options
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const options = { page: searchQuery ? 1 : page, limit };
@@ -22,19 +19,22 @@ export const getAllConversationCntrlr = async (req, res) => {
       totalConversations,
       totalPages,
       currentPage,
-    } = await getAllConversations(sourceBy, searchQuery, options);
+    } = await getConversations(sourceBy, searchQuery, options);
 
-    if (!conversationsWithText || conversationsWithText.length === 0) {
-      return sendErrorResponse(res, 404, "Conversations not found!");
-    }
+    const { searchChat } = await getConversationChatSearch(
+      sourceBy,
+      searchQuery
+    );
+
+    const responseData = [...conversationsWithText, ...searchChat];
 
     return sendSuccessResponse(res, "Conversations fetched successfully", {
-      conversations: conversationsWithText,
+      conversations: responseData,
       pagination: {
         totalConversations,
-        totalPages,
-        currentPage,
-        limit,
+        totalConversationPages: totalPages,
+        currentConversationPage: currentPage,
+        ConversationLimit: limit,
       },
     });
   } catch (error) {
