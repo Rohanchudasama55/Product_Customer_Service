@@ -81,8 +81,11 @@ export const createCampaignController = async (req, res) => {
 // Controller for fetching the campaign status counts
 export const getCampaignStatusCountsController = async (req, res) => {
   try {
+    // Define sourceby data from query parameter
+    const sourceBy = req.user.managedBy;
+
     // Call service to fetch the campaign status counts
-    const campaigns = await campaignStatusCountsServices();
+    const campaigns = await campaignStatusCountsServices(sourceBy);
     if (campaigns && campaigns.length > 0) {
       const campaignData = campaigns[0];
       delete campaignData._id;
