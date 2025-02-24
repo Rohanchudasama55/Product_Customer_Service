@@ -38,8 +38,8 @@ export const getAllCampaignController = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Campaign fetched successfully",
-      200,
-      campaigns
+      campaigns,
+      200
     );
   } catch (error) {
     return sendErrorResponse(
@@ -66,8 +66,8 @@ export const createCampaignController = async (req, res) => {
     return sendSuccessResponse(
       res,
       "campaign created succesfully",
-      200,
-      campaignData
+      campaignData,
+      200
     );
   } catch (error) {
     return await sendErrorResponse(
@@ -95,8 +95,8 @@ export const getCampaignStatusCountsController = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Campaign status counts fetched successfully",
-      200,
-      campaigns
+      campaigns,
+      200
     );
   } catch (error) {
     return sendErrorResponse(

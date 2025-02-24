@@ -28,15 +28,20 @@ export const getAllConversationCntrlr = async (req, res) => {
 
     const responseData = [...conversationsWithText, ...searchChat];
 
-    return sendSuccessResponse(res, "Conversations fetched successfully", {
-      conversations: responseData,
-      pagination: {
-        totalConversations,
-        totalConversationPages: totalPages,
-        currentConversationPage: currentPage,
-        ConversationLimit: limit,
+    return sendSuccessResponse(
+      res,
+      "Conversations fetched successfully",
+      {
+        conversations: responseData,
+        pagination: {
+          totalConversations,
+          totalConversationPages: totalPages,
+          currentConversationPage: currentPage,
+          ConversationLimit: limit,
+        },
       },
-    });
+      200
+    );
   } catch (error) {
     return await sendErrorResponse(
       res,
@@ -56,7 +61,8 @@ export const getConversationByIdCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "conversation fetch successfully",
-      Conversation
+      Conversation,
+      200
     );
   } catch (error) {
     console.error("Error fetching Conversation:", error.message);
@@ -81,7 +87,8 @@ export const conversationInitiateCntrlr = async (req, res) => {
     return await sendSuccessResponse(
       res,
       "conversation Initiate successfully",
-      conversationData
+      conversationData,
+      200
     );
   } catch (error) {
     return await sendErrorResponse(

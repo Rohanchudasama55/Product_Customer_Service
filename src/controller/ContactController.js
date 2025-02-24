@@ -22,7 +22,8 @@ export const createContactCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Contact created successfully",
-      contactData
+      contactData,
+      201
     );
   } catch (error) {
     return sendErrorResponse(
@@ -36,7 +37,12 @@ export const createContactCntrlr = async (req, res) => {
 export const getContactByIdCntrlr = async (req, res) => {
   try {
     const contact = await getContactByIdService(req.params.id);
-    return sendSuccessResponse(res, "Contact fetched successfully", contact);
+    return sendSuccessResponse(
+      res,
+      "Contact fetched successfully",
+      contact,
+      200
+    );
   } catch (error) {
     return sendErrorResponse(
       res,
@@ -67,7 +73,12 @@ export const getContactsCntrlr = async (req, res) => {
 
     const sourceBy = req.user.managedBy;
     const contacts = await getContactsService({ ...filter, sourceBy }, options);
-    return sendSuccessResponse(res, "Contacts fetched successfully", contacts);
+    return sendSuccessResponse(
+      res,
+      "Contacts fetched successfully",
+      contacts,
+      200
+    );
   } catch (error) {
     return sendErrorResponse(
       res,
@@ -86,7 +97,8 @@ export const updateContactByIdCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Contact updated successfully",
-      updatedContact
+      updatedContact,
+      200
     );
   } catch (error) {
     return sendErrorResponse(
@@ -103,7 +115,8 @@ export const deleteContactByIdCntrlr = async (req, res) => {
     return sendSuccessResponse(
       res,
       "Contact deleted successfully",
-      deletedContact
+      deletedContact,
+      200
     );
   } catch (error) {
     return sendErrorResponse(

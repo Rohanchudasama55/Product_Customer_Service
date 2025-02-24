@@ -40,7 +40,8 @@ export const createTemplateCntrlr = async (req, res) => {
       return sendSuccessResponse(
         res,
         "Template created successfully",
-        templateData
+        templateData,
+        201
       );
     }
     return sendErrorResponse(res, 500, "Something Went wrong");
@@ -56,7 +57,12 @@ export const createTemplateCntrlr = async (req, res) => {
 export const getMetaTemplateCntrlr = async (req, res) => {
   try {
     const templates = await getAllMetatemplateService();
-    return sendSuccessResponse(res, "Template Fetch Successfully", templates);
+    return sendSuccessResponse(
+      res,
+      "Template Fetch Successfully",
+      templates,
+      200
+    );
   } catch (error) {
     return sendErrorResponse(
       res,
@@ -78,7 +84,12 @@ export const getTemplateLibraryCntrlr = async (req, res) => {
     const options = { page: search ? 1 : page, limit };
 
     const templates = await getTemplateLibraryService(filter, options);
-    return sendSuccessResponse(res, "Template Fetch Successfully", templates);
+    return sendSuccessResponse(
+      res,
+      "Template Fetch Successfully",
+      templates,
+      200
+    );
   } catch (error) {
     console.log("Error while getTemplateLibrary::", error);
     return sendErrorResponse(

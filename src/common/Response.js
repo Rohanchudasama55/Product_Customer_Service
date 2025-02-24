@@ -1,8 +1,8 @@
 export const sendSuccessResponse = (
   res,
   message,
-  statusCode = 200,
-  result = {}
+  result = {},
+  statusCode = 200
 ) => {
   return res.status(200).json({ success: true, statusCode, message, result });
 };
