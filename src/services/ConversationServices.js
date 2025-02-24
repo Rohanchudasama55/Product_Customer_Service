@@ -346,6 +346,7 @@ export const conversationInitiateServive = async (data) => {
       { phoneNumber, sourceBy },
       {}
     );
+    contact = contact?.data;
     contact = contact[0];
     if (!contact || contact.length === 0) {
       contact = await DatabaseHelper.createRecord(contactModel, {
@@ -358,6 +359,7 @@ export const conversationInitiateServive = async (data) => {
     conversation = await DatabaseHelper.getRecords(ConversationModel, {
       receiverId: contact._id,
     });
+    conversation = conversation?.data;
     conversation = conversation[0];
     if (!conversation || conversation.length === 0) {
       conversation = await DatabaseHelper.createRecord(ConversationModel, {
