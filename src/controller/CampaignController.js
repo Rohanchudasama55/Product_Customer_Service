@@ -1,10 +1,11 @@
 import {
   campaignListServices,
+  campaignStatusCountsServices,
   createCampaignService,
 } from "../services/CampaignServices.js";
 import { sendSuccessResponse, sendErrorResponse } from "../common/Response.js";
 
-export const getAllCampaignCntrlr = async (req, res) => {
+export const getAllCampaignController = async (req, res) => {
   try {
     let filter = {};
     if (req.user.role === "admin") {
@@ -44,7 +45,7 @@ export const getAllCampaignCntrlr = async (req, res) => {
   }
 };
 
-export const createCampaignCntrlr = async (req, res) => {
+export const createCampaignController = async (req, res) => {
   try {
     const sourceBy = req.user.managedBy;
     const createdBy = req.user._id;
@@ -64,6 +65,28 @@ export const createCampaignCntrlr = async (req, res) => {
     );
   } catch (error) {
     return await sendErrorResponse(
+      res,
+      error.statusCode || 500,
+      error.message || "Internal Server Error"
+    );
+  }
+};
+
+export const getCampaignStatusCountsController = async (req, res) => {
+  try {
+    const campaigns = await campaignStatusCountsServices();
+    if (campaigns && campaigns.length > 0) {
+      const campaignData = campaigns[0];
+      delete campaignData._id;
+    }
+
+    return sendSuccessResponse(
+      res,
+      "Campaign status counts fetched successfully",
+      campaigns
+    );
+  } catch (error) {
+    return sendErrorResponse(
       res,
       error.statusCode || 500,
       error.message || "Internal Server Error"
