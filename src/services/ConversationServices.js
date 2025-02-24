@@ -98,6 +98,7 @@ const getConversationPipeline = (sourceBy, searchQuery) => {
       },
     },
     { $match: matchConditions },
+    { $sort: { updatedAt: -1 } },
   ];
 };
 
