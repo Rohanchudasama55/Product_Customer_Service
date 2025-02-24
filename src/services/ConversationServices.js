@@ -4,14 +4,29 @@ import mongoose from "mongoose";
 import TemplateModel from "../model/TemplateModel.js";
 import contactModel from "../model/ContactModel.js";
 
-export const getAllConversations = async (sourceBy, options) => {
+export const getAllConversations = async (sourceBy, searchQuery, options) => {
   try {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
+    const matchConditions = {};
+
+    // add searchQuery
+    if (searchQuery) {
+      matchConditions["$or"] = [
+        { "receiverData.email": { $regex: new RegExp(searchQuery, "i") } },
+        { "receiverData.name": { $regex: new RegExp(searchQuery, "i") } },
+        {
+          "receiverData.phoneNumber": { $regex: new RegExp(searchQuery, "i") },
+        },
+      ];
+    }
 
     const conversationsWithText = await ConversationModel.aggregate([
       {
-        $match: { isDeleted: false, sourceBy },
+        $match: {
+          isDeleted: false,
+          sourceBy,
+        },
       },
       {
         $lookup: {
@@ -89,6 +104,9 @@ export const getAllConversations = async (sourceBy, options) => {
           },
           lastText: { $arrayElemAt: ["$lastText", 0] },
         },
+      },
+      {
+        $match: matchConditions,
       },
       {
         $skip: skip,
