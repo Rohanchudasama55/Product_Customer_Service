@@ -3,120 +3,116 @@ import DatabaseHelper from "../common/DatabaseHelper.js";
 import mongoose from "mongoose";
 import TemplateModel from "../model/TemplateModel.js";
 import contactModel from "../model/ContactModel.js";
+import TextModel from "../model/TextModel.js";
 
-export const getAllConversations = async (sourceBy, searchQuery, options) => {
+const getConversationPipeline = (sourceBy, searchQuery) => {
+  const matchConditions = {};
+
+  if (searchQuery) {
+    matchConditions["$or"] = [
+      { "receiverData.email": { $regex: new RegExp(searchQuery, "i") } },
+      { "receiverData.name": { $regex: new RegExp(searchQuery, "i") } },
+      {
+        "receiverData.phoneNumber": { $regex: new RegExp(searchQuery, "i") },
+      },
+    ];
+  }
+
+  return [
+    { $match: { isDeleted: false, sourceBy } },
+    {
+      $lookup: {
+        from: "contacts",
+        localField: "receiverId",
+        foreignField: "_id",
+        as: "receiverData",
+      },
+    },
+    {
+      $addFields: {
+        lastTextIdStr: { $toString: "$lastTextId" },
+        isValidLastTextId: {
+          $cond: {
+            if: { $eq: [{ $strLenCP: { $toString: "$lastTextId" } }, 24] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "texts",
+        let: {
+          lastTextId: {
+            $cond: [
+              { $eq: ["$isValidLastTextId", true] },
+              { $toObjectId: "$lastTextIdStr" },
+              null,
+            ],
+          },
+        },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$_id", "$$lastTextId"] } } },
+          {
+            $project: {
+              _id: 1,
+              text: 1,
+              conversationId: 1,
+              to: 1,
+              from: 1,
+              type: 1,
+              IsIncoming: 1,
+              textId: 1,
+              status: 1,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          },
+        ],
+        as: "lastText",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        senderId: 1,
+        isDeleted: 1,
+        lastTextId: 1,
+        unreadCount: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        receiverData: {
+          $cond: {
+            if: { $eq: [{ $size: "$receiverData" }, 1] },
+            then: {
+              _id: { $arrayElemAt: ["$receiverData._id", 0] },
+              name: { $arrayElemAt: ["$receiverData.name", 0] },
+              email: { $arrayElemAt: ["$receiverData.email", 0] },
+              phoneNumber: { $arrayElemAt: ["$receiverData.phoneNumber", 0] },
+            },
+            else: "$receiverData",
+          },
+        },
+        lastText: { $arrayElemAt: ["$lastText", 0] },
+      },
+    },
+    { $match: matchConditions },
+  ];
+};
+
+export const getConversations = async (sourceBy, searchQuery, options) => {
   try {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
-    const matchConditions = {};
-
-    // add searchQuery
-    if (searchQuery) {
-      matchConditions["$or"] = [
-        { "receiverData.email": { $regex: new RegExp(searchQuery, "i") } },
-        { "receiverData.name": { $regex: new RegExp(searchQuery, "i") } },
-        {
-          "receiverData.phoneNumber": { $regex: new RegExp(searchQuery, "i") },
-        },
-      ];
-    }
+    const pipeline = getConversationPipeline(sourceBy, searchQuery);
 
     const conversationsWithText = await ConversationModel.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-          sourceBy,
-        },
-      },
-      {
-        $lookup: {
-          from: "contacts",
-          localField: "receiverId",
-          foreignField: "_id",
-          as: "receiverData",
-        },
-      },
-      {
-        $addFields: {
-          lastTextIdStr: { $toString: "$lastTextId" }, // Co
-          isValidLastTextId: {
-            $cond: {
-              if: { $eq: [{ $strLenCP: { $toString: "$lastTextId" } }, 24] }, // Check length after conversion
-              then: true,
-              else: false,
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "texts",
-          let: {
-            lastTextId: {
-              $cond: [
-                { $eq: ["$isValidLastTextId", true] },
-                { $toObjectId: "$lastTextIdStr" },
-                null,
-              ],
-            },
-          },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$_id", "$$lastTextId"] } } },
-            {
-              $project: {
-                _id: 1,
-                text: 1,
-                conversationId: 1,
-                to: 1,
-                from: 1,
-                type: 1,
-                IsIncoming: 1,
-                textId: 1,
-                status: 1,
-                createdAt: 1,
-                updatedAt: 1,
-              },
-            },
-          ],
-          as: "lastText",
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          senderId: 1,
-          isDeleted: 1,
-          lastTextId: 1,
-          unreadCount: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          receiverData: {
-            $cond: {
-              if: { $eq: [{ $size: "$receiverData" }, 1] },
-              then: {
-                _id: { $arrayElemAt: ["$receiverData._id", 0] },
-                name: { $arrayElemAt: ["$receiverData.name", 0] },
-                email: { $arrayElemAt: ["$receiverData.email", 0] },
-                phoneNumber: { $arrayElemAt: ["$receiverData.phoneNumber", 0] },
-              },
-              else: "$receiverData",
-            },
-          },
-          lastText: { $arrayElemAt: ["$lastText", 0] },
-        },
-      },
-      {
-        $match: matchConditions,
-      },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: limit,
-      },
+      ...pipeline,
+      { $skip: skip },
+      { $limit: limit },
     ]);
 
-    // Count total conversations for pagination metadata
     const totalConversations = await ConversationModel.countDocuments({
       isDeleted: false,
       sourceBy,
@@ -127,6 +123,59 @@ export const getAllConversations = async (sourceBy, searchQuery, options) => {
       totalConversations,
       totalPages: Math.ceil(totalConversations / limit),
       currentPage: page,
+    };
+  } catch (error) {
+    throw {
+      statusCode: error.statusCode || 500,
+      message: error.message || "Error in fetch conversation service",
+      error,
+    };
+  }
+};
+
+export const getConversationChatSearch = async (sourceBy, searchQuery) => {
+  try {
+    const pipeline = getConversationPipeline(sourceBy);
+    const conversationsWithTexts = await ConversationModel.aggregate(pipeline);
+    const conversationIds = conversationsWithTexts.map(
+      (conversation) => conversation._id
+    );
+
+    if (!conversationIds.length || !searchQuery) return { searchChat: [] };
+
+    // Fetch matching text records
+    const textMatches = await TextModel.aggregate([
+      {
+        $match: {
+          conversationId: { $in: conversationIds },
+          text: { $regex: new RegExp(searchQuery, "i") },
+        },
+      },
+      {
+        $lookup: {
+          from: "conversations",
+          localField: "conversationId",
+          foreignField: "_id",
+          as: "conversationData",
+        },
+      },
+      {
+        $unwind: "$conversationData", // To access conversation data
+      },
+      {
+        $project: {
+          _id: 1,
+          text: 1,
+          conversationId: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          conversationData: 1, // Include full conversation data
+        },
+      },
+    ]);
+
+    return {
+      searchChat: textMatches,
     };
   } catch (error) {
     throw {
