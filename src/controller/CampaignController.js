@@ -18,6 +18,21 @@ export const getAllCampaignCntrlr = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 10;
     const options = { page, limit };
 
+    // Add filters for date range
+    const { start_date, end_date } = req.query;
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(end_date);
+      end.setHours(23, 59, 59, 999);
+
+      filter.createdAt = {
+        $gte: start,
+        $lte: end,
+      };
+    }
+
     const campaigns = await campaignListServices(filter, options);
     return sendSuccessResponse(res, "Campaign fetched successfully", campaigns);
   } catch (error) {
