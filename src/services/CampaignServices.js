@@ -224,6 +224,7 @@ export const createCampaignService = async (data) => {
   }
 };
 
+// Service to fetch and aggregate campaign status counts
 export const campaignStatusCountsServices = async () => {
   try {
     const result = await CampaignModel.aggregate([
@@ -239,6 +240,7 @@ export const campaignStatusCountsServices = async () => {
       },
     ]);
 
+    // Return the aggregated result if found
     if (result && result.length > 0) {
       return result;
     } else {
